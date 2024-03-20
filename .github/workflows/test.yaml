@@ -1,0 +1,16 @@
+name: Test
+
+on:
+  workflow_dispatch:
+    inputs:
+      input:
+        default: '<default_value>'
+        required: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          # test/test
+          echo 'input => ${{ github.event.inputs.input }}'
