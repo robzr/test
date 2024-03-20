@@ -2,7 +2,7 @@ name: Test
 
 on:
   repository_dispatch:
-    types: [trigger-workflow]
+#    types: [trigger-workflow]
 
 jobs:
   test:
@@ -10,4 +10,4 @@ jobs:
     steps:
       - run: |
           # test/test
-          echo 'input => ${{ github.event.client_payload }}'
+          jq -C . <<< '${{ toJSON(github.event.client_payload) }}'
