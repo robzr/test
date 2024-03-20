@@ -1,11 +1,8 @@
 name: Test
 
 on:
-  workflow_dispatch:
-    inputs:
-      input:
-        default: '<default_value>'
-        required: false
+  repository_dispatch:
+    types: [trigger-workflow]
 
 jobs:
   test:
@@ -13,4 +10,4 @@ jobs:
     steps:
       - run: |
           # test/test
-          echo 'input => ${{ github.event.inputs.input }}'
+          echo 'input => ${{ github.event.client_payload }}'
