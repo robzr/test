@@ -46,9 +46,12 @@ def decode:
   }
   ;
 
-def validate($signature):
-  decode 
+def verify($signature):
+  . as $token
+  | decode 
   | . * {
-    validated: (($signature | @base64d) == (.signature | @base64d))
+    algorithm: (.headers | @json | .algorithm),
+    token: $token,
+    verified: (($signature | @base64d) == (.signature | @base64d)),
   }
   ;

@@ -24,30 +24,31 @@ inputs:
 
 outputs:
   algorithm:
-    description: (Encode/Decode) Signing algorithm.
-    value:
+    description: Signing algorithm.
+    value: ${{ fromJSON(steps.decode.outputs.json).algorithm }}
   headers:
-    description: (Encode/Decode) Decoded headers in JSON.
-    value: 
+    description: Decoded headers in JSON.
+    value: ${{ toJSON(fromJSON(steps.decode.outputs.json).headers) }}
+  json:
+    description: Decoded token object in JSON format.
+    value: ${{ steps.decode.outputs.json }}
   payload:
-    description: (Encode/Decode) Decoded payload in JSON.
-    value: 
+    description: Decoded payload in JSON.
+    value: ${{ toJSON(fromJSON(steps.decode.outputs.json).payload) }}
   token:
-    description: (Encode/Decode) Encoded & optionally signed token.
-    value: 
+    description: Encoded & optionally signed token.
+    value: ${{ fromJSON(steps.decode.outputs.json).token }}
   verified:
-    description: (Encode/Decode) true/false boolean-as-string indicating if the token is verified.
-    value: 
+    description: Boolean-as-string ("true" / "false") indicating if the token is verified.
+    value:  ${{ fromJSON(steps.decode.outputs.json).verified }}
 
 runs:
   using: composite
   steps:
-    # TODO set back to == to disable default debug
-    - if: env.ACTIONS_STEP_DEBUG != 'true'
-      name: DEBUG
+    - if: env.ACTIONS_STEP_DEBUG == 'true'
       run: |
         # JWT - Debug
-        echo ::group::Display utility versions
+        echo ::group::Debug - utility versions
         yq --version
         jq --version
         openssl version
@@ -62,12 +63,11 @@ runs:
         SECRET: ${{ inputs.secret }}
       id: encode
       if: inputs.payload != ''
-      name: ENCODE
       run: |
         # JWT - Encode Token
         HEADERS=$(yq -o json --expression 'with_entries(.value |= envsubst)' <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
-        if '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' ; then
+        if '${{ env.ACTIONS_STEP_DEBUG == 'true' && 'true' || 'false' }}' ; then
           echo -e "::group::Debug - headers\n${HEADERS}\n::endgroup::"
           echo -e "::group::Debug - payload\n${PAYLOAD}\n::endgroup::"
         fi
@@ -96,7 +96,7 @@ runs:
             [($token_unsigned), ($signature | url_safe_encode)] 
             | join(".")
             | "token=\(.)"
-          ' | tee -a "$GITHUB_OUTPUT"
+          ' >>"${GITHUB_OUTPUT}"
       shell: bash
 
     - env:
@@ -110,14 +110,17 @@ runs:
           jq -n -r -L "$JQ_LIB_PATH" --arg token "$TOKEN" \
             'include "jwt"; $token | decode.unsigned'
         )
+        SIGNATURE_ARGS=()
+        if '${{ inputs.SECRETS == '' && 'false' || 'true' }}' ; then 
+          SIGNATURE_ARGS=(-hmac "$SECRET")
+        fi
         SIGNATURE=$(
           echo -n "$TOKEN_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
-
-        echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
-        echo '::group::Token Object'
+        echo 'json<<EOF' >>"${GITHUB_OUTPUT}"
+        echo '::group::Decoded Token Object'
         jq -n -L "$JQ_LIB_PATH" --arg token "$TOKEN" --arg signature "$SIGNATURE" \
           'include "jwt"; $token | validate($signature)' |
           tee -a "$GITHUB_OUTPUT" |
