@@ -89,6 +89,7 @@ runs:
         ${TOKEN_UNSIGNED}
         EOF
         _EOF_
+        echo finished step 0
       shell: bash
 
     - env:
@@ -100,15 +101,15 @@ runs:
         # JWT - Decode/Verify Token
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUTS}"
         echo '::group::Token Object'
-        jq -L "$JQ_LIB_PATH" \
-          ' include "jwt";
-            {
-              headers: (split(".")[0] | url_safe_base64_decode | fromjson),
-              payload: (split(".")[1] | url_safe_base64_decode | fromjson),
-            }
-          ' <<<"${TOKEN}" |
-          tee -a "$GITHUB_OUTPUTS" |
-          jq -C .
+        #jq -L "$JQ_LIB_PATH" \
+        #  ' include "jwt";
+        #    {
+        #      headers: (split(".")[0] | url_safe_base64_decode | fromjson),
+        #      payload: (split(".")[1] | url_safe_base64_decode | fromjson),
+        #    }
+        #  ' <<<"${TOKEN}" |
+        #  tee -a "$GITHUB_OUTPUTS" |
+        #  jq -C .
         echo '::endgroup::'
         echo 'EOF' >>"${GITHUB_OUTPUTS}"
       shell: bash
