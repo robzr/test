@@ -1,0 +1,64 @@
+name: JWT
+
+inputs:
+  algorithm:
+    default: HS256
+    description: (Encode) Signing algorithm for encoding a new JWT.
+  fail-on-unverified:
+    default: false
+    description: (Decode) Fail if the token signing cannot be verified.
+  headers:
+    default: |
+      alg: \($algorithm)
+      typ: JWT
+    description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
+  payload:
+    description: (Encode) Payload data structure for encoding a new JWT (JSON or YAML).
+    required: false
+  secret:
+    description: (Decode/Encode) (Optional) Secret used to sign or verify a signed token.
+    required: false
+  token:
+    description: (Decode/Encode) JWT token that will be decoded & verified.
+    required: false
+
+outputs:
+  algorithm:
+    description: (Encode/Decode) Signing algorithm.
+    value: 
+  headers:
+    description: (Encode/Decode) Decoded headers in JSON.
+    value: 
+  payload:
+    description: (Encode/Decode) Decoded payload in JSON.
+    value: 
+  token:
+    description: (Encode/Decode) Encoded & optionally signed token.
+    value: 
+  verified:
+    description: (Encode/Decode) true/false boolean-as-string indicating if the token is verified.
+    value: 
+
+runs:
+  using: composite
+  steps:
+    - env:
+        ALGORITHM: ${{ inputs.algorithm }}
+        HEADERS: ${{ inputs.headers }}
+        PAYLOAD: ${{ inputs.payload }}
+        SECRET: ${{ inputs.secret }}
+      id: encode
+      if: inputs.payload != ''
+      run: |
+        # Encode JWT token
+        echo ::group::yq
+        yq --version
+        echo ::endgroup::
+        echo ::group::jq
+        jq --version
+        echo ::endgroup::
+        echo ::group::openssl
+        openssl --version
+        echo ::endgroup::
+      shell: bash
+
