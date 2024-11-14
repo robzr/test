@@ -121,10 +121,8 @@ runs:
           --arg signature "$SIGNATURE" \
           ' include "jwt";
              
-            #[($token_unsigned), ($signature | url_safe_encode)]
-            #| join(".")
             "token="
-          ' 
+          ' | tee -a "$GITHUB_OUTPUT"
          #>>"${GITHUB_OUTPUT}"
       shell: bash
 
