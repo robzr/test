@@ -75,8 +75,6 @@ runs:
         echo "$PAYLOAD"
         echo ::endgroup::
 
-        set -x
-
         TOKEN_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
@@ -103,15 +101,15 @@ runs:
         # JWT - Decode/Verify Token
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
-        #jq -L "$JQ_LIB_PATH" \
-        #  ' include "jwt";
-        #    {
-        #      headers: (split(".")[0] | url_safe_base64_decode | fromjson),
-        #      payload: (split(".")[1] | url_safe_base64_decode | fromjson),
-        #    }
-        #  ' <<<"${TOKEN}" |
-        #  tee -a "$GITHUB_OUTPUT" |
-        #  jq -C .
+        jq -L "$JQ_LIB_PATH" \
+          ' include "jwt";
+            {
+              headers: (split(".")[0] | url_safe_base64_decode | fromjson),
+              payload: (split(".")[1] | url_safe_base64_decode | fromjson),
+            }
+          ' <<<"${TOKEN}" |
+          tee -a "$GITHUB_OUTPUT" |
+          jq -C .
         echo '::endgroup::'
         echo 'EOF' >>"${GITHUB_OUTPUT}"
       shell: bash
