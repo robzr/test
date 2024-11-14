@@ -85,8 +85,6 @@ runs:
       if: inputs.payload != ''
       run: |
         # JWT - Encode Token
-        set -x
-
         HEADERS=$(yq -o json --expression 'with_entries(.value |= envsubst)' <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
         if '${{ env.ACTIONS_STEP_DEBUG == 'true' && 'true' || 'false' }}' ; then
