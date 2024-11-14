@@ -16,7 +16,7 @@ inputs:
     description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
     type: string
   jwt:
-    description: (Decode/Encode) JWT token that will be decoded & verified.
+    description: (Decode/Encode) JWT that will be decoded & verified.
     required: false
     type: string
   payload:
@@ -24,7 +24,7 @@ inputs:
     required: false
     type: string
   secret:
-    description: (Decode/Encode) (Optional) Secret used to sign or verify a signed token.
+    description: (Decode/Encode) (Optional) Secret used to sign or verify a signed JWT.
     required: false
     type: string
 
@@ -36,16 +36,16 @@ outputs:
     description: Decoded headers in JSON.
     value: ${{ toJSON(fromJSON(steps.decode.outputs.json).headers) }}
   json:
-    description: Decoded token object in JSON format.
+    description: Decoded JWT object in JSON format.
     value: ${{ steps.decode.outputs.json }}
   jwt:
-    description: Encoded & signed token.
-    value: ${{ fromJSON(steps.decode.outputs.json).token }}
+    description: Encoded & signed JWT.
+    value: ${{ fromJSON(steps.decode.outputs.json).jwt }}
   payload:
     description: Decoded payload in JSON.
     value: ${{ toJSON(fromJSON(steps.decode.outputs.json).payload) }}
   verified:
-    description: Boolean-as-string ("true" / "false") indicating if the token is verified.
+    description: Boolean-as-string ("true" / "false") indicating if the JWT is verified.
     value:  ${{ fromJSON(steps.decode.outputs.json).verified }}
 
 runs:
@@ -96,10 +96,10 @@ runs:
             base64
         )
         jq -n -r -L "$JQ_LIB_PATH" \
-          --arg token_unsigned "$JWT_UNSIGNED" \
+          --arg jwt_unsigned "$JWT_UNSIGNED" \
           --arg signature "$SIGNATURE" \
           ' include "jwt";
-            [($token_unsigned), ($signature | url_safe_encode)] 
+            [($jwt_unsigned), ($signature | url_safe_encode)] 
             | join(".")
             | "jwt=\(.)"
           ' >>"${GITHUB_OUTPUT}"
@@ -113,7 +113,7 @@ runs:
       run: |
         # JWT - Decode/Verify Token
         JWT_UNSIGNED=$(
-          jq -n -r -L "$JQ_LIB_PATH" --arg token "$JWT" \
+          jq -n -r -L "$JQ_LIB_PATH" --arg jwt "$JWT" \
             'include "jwt"; $jwt | decode_raw.unsigned'
         )
         SIGNATURE_ARGS=()
