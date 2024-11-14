@@ -68,12 +68,14 @@ runs:
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
 
-        echo ::group::HEADERS
-        echo "$HEADERS"
-        echo ::endgroup::
-        echo ::group::PAYLOAD
-        echo "$PAYLOAD"
-        echo ::endgroup::
+        if [ '${{ env.ACTIONS_STEP_DEBUG == 'true' && 'true' || 'false' }}' -eq true ] ; then
+          echo ::group::HEADERS
+          echo "$HEADERS"
+          echo ::endgroup::
+          echo ::group::PAYLOAD
+          echo "$PAYLOAD"
+          echo ::endgroup::
+        fi
 
         TOKEN_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
@@ -89,7 +91,6 @@ runs:
         ${TOKEN_UNSIGNED}
         EOF
         _EOF_
-        echo finished step 0
       shell: bash
 
     - env:
@@ -99,6 +100,9 @@ runs:
       id: decode
       run: |
         # JWT - Decode/Verify Token
+        echo ::group::token
+        echo "$TOKEN"
+        echo ::endgroup::
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
         jq -L "$JQ_LIB_PATH" \
@@ -108,8 +112,7 @@ runs:
               payload: (split(".")[1] | url_safe_base64_decode | fromjson),
             }
           ' <<<"${TOKEN}" |
-          tee -a "$GITHUB_OUTPUT" |
-          jq -C .
+          tee -a "$GITHUB_OUTPUT"
         echo '::endgroup::'
         echo 'EOF' >>"${GITHUB_OUTPUT}"
       shell: bash
