@@ -4,23 +4,29 @@ inputs:
   algorithm:
     default: HS256
     description: (Encode) Signing algorithm for encoding a new JWT.
+    type: string
   fail-on-unverified:
     default: false
-    description: (Decode) Fail if the token signing cannot be verified.
+    description: (Decode) Fail if the JWT signing cannot be verified.
+    type: boolean
   headers:
     default: |
       alg: ${ALGORITHM}
       typ: JWT
     description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
+    type: string
+  jwt:
+    description: (Decode/Encode) JWT token that will be decoded & verified.
+    required: false
+    type: string
   payload:
     description: (Encode) Payload data structure for encoding a new JWT (JSON or YAML).
     required: false
+    type: string
   secret:
     description: (Decode/Encode) (Optional) Secret used to sign or verify a signed token.
     required: false
-  token:
-    description: (Decode/Encode) JWT token that will be decoded & verified.
-    required: false
+    type: string
 
 outputs:
   algorithm:
@@ -32,12 +38,12 @@ outputs:
   json:
     description: Decoded token object in JSON format.
     value: ${{ steps.decode.outputs.json }}
+  jwt:
+    description: Encoded & signed token.
+    value: ${{ fromJSON(steps.decode.outputs.json).token }}
   payload:
     description: Decoded payload in JSON.
     value: ${{ toJSON(fromJSON(steps.decode.outputs.json).payload) }}
-  token:
-    description: Encoded & optionally signed token.
-    value: ${{ fromJSON(steps.decode.outputs.json).token }}
   verified:
     description: Boolean-as-string ("true" / "false") indicating if the token is verified.
     value:  ${{ fromJSON(steps.decode.outputs.json).verified }}
@@ -71,7 +77,7 @@ runs:
           echo -e "::group::Debug - headers\n${HEADERS}\n::endgroup::"
           echo -e "::group::Debug - payload\n${PAYLOAD}\n::endgroup::"
         fi
-        TOKEN_UNSIGNED=$(
+        JWT_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
             --arg payload "$PAYLOAD" \
@@ -85,44 +91,44 @@ runs:
           SIGNATURE_ARGS=(-hmac "$SECRET")
         fi
         SIGNATURE=$(
-          echo -n "$TOKEN_UNSIGNED" |
+          echo -n "$JWT_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
         jq -n -r -L "$JQ_LIB_PATH" \
-          --arg token_unsigned "$TOKEN_UNSIGNED" \
+          --arg token_unsigned "$JWT_UNSIGNED" \
           --arg signature "$SIGNATURE" \
           ' include "jwt";
             [($token_unsigned), ($signature | url_safe_encode)] 
             | join(".")
-            | "token=\(.)"
+            | "jwt=\(.)"
           ' >>"${GITHUB_OUTPUT}"
       shell: bash
 
     - env:
         JQ_LIB_PATH: ${{ github.action_path }}
-        TOKEN: ${{ inputs.token == '' && steps.encode.outputs.token || inputs.token }}
+        JWT: ${{ inputs.jwt == '' && steps.encode.outputs.jwt || inputs.jwt }}
         SECRET: ${{ inputs.secret }}
       id: decode
       run: |
         # JWT - Decode/Verify Token
-        TOKEN_UNSIGNED=$(
-          jq -n -r -L "$JQ_LIB_PATH" --arg token "$TOKEN" \
-            'include "jwt"; $token | decode.unsigned'
+        JWT_UNSIGNED=$(
+          jq -n -r -L "$JQ_LIB_PATH" --arg token "$JWT" \
+            'include "jwt"; $jwt | decode_raw.unsigned'
         )
         SIGNATURE_ARGS=()
         if '${{ inputs.SECRETS == '' && 'false' || 'true' }}' ; then 
           SIGNATURE_ARGS=(-hmac "$SECRET")
         fi
         SIGNATURE=$(
-          echo -n "$TOKEN_UNSIGNED" |
+          echo -n "$JWT_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
         echo 'json<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Decoded Token Object'
-        jq -n -L "$JQ_LIB_PATH" --arg token "$TOKEN" --arg signature "$SIGNATURE" \
-          'include "jwt"; $token | verify($signature)' |
+        jq -n -L "$JQ_LIB_PATH" --arg jwt "$JWT" --arg signature "$SIGNATURE" \
+          'include "jwt"; $jwt | verify($signature)' |
           tee -a "$GITHUB_OUTPUT" |
           jq -C
         echo '::endgroup::'

@@ -27,16 +27,16 @@ def url_safe_base64_encode:
   ;
 
 def validate:
-  (split(".") | length) as $token_fields
-  | if $token_fields != 3 then
-      "Invalid token - contains \($token_fields) fields, requires 3."
+  (split(".") | length) as $jwt_fields
+  | if $jwt_fields != 3 then
+      "Invalid jwt - contains \($jwt_fields) fields, requires 3."
       | error
     else
       .
     end
   ;
 
-def decode:
+def decode_raw:
   validate
   | {
     headers: (split(".")[0] | url_safe_base64_decode | fromjson),
@@ -47,11 +47,11 @@ def decode:
   ;
 
 def verify($signature):
-  . as $token
-  | decode 
+  . as $jwt
+  | decode_raw 
   | . * {
     algorithm: (.headers.alg),
-    token: $token,
+    jwt: $jwt,
     verified: (($signature | @base64d) == (.signature | @base64d)),
   }
   ;
