@@ -65,26 +65,8 @@ runs:
       name: ENCODE
       run: |
         # JWT - Encode Token
-        export ALGORITHM=${ALGORITHM}
-        cat >debug_output <<_EOF_
-        ALGORITHM="${ALGORITHM}"
-        HEADERS_RAW='${HEADERS}'
-        PAYLOAD_RAW='${PAYLOAD}'
-        _EOF_
-        echo ::group::yq headers
-        yq -o json <<<"${HEADERS}"
-        echo ::endgroup::
-        echo ::group::yq payload
-        yq -o json <<<"${PAYLOAD}"
-        echo ::endgroup::
-
         HEADERS=$(yq -o json --expression 'with_entries(.value |= envsubst)' <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
-
-        cat >>debug_output <<_EOF_
-        HEADERS='${HEADERS}'
-        PAYLOAD='${PAYLOAD}'
-        _EOF_
 
         if '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' ; then
           echo ::group::HEADERS
@@ -124,11 +106,6 @@ runs:
             | "token=\(.)"
           ' | tee -a "$GITHUB_OUTPUT"
       shell: bash
-
-    - uses: actions/upload-artifact@v4
-      with:
-        name: debug_output
-        path: debug_output
 
     - env:
         JQ_LIB_PATH: ${{ github.action_path }}
