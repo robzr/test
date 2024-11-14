@@ -111,7 +111,9 @@ runs:
         fi
 
         SIGNATURE=$(
-          echo -n "$TOKEN_UNSIGNED" | openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 | base64
+          echo -n "$TOKEN_UNSIGNED" |
+            openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
+            base64
         )
 
         echo "SIGNATURE=${SIGNATURE} oh yeah!"
