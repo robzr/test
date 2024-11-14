@@ -75,8 +75,7 @@ runs:
         echo "$PAYLOAD"
         echo ::endgroup::
 
-        echo got here-0
-        #TOKEN_UNSIGNED=$(
+        TOKEN_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
             --arg payload "$PAYLOAD" \
@@ -84,9 +83,8 @@ runs:
               [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)]
               | join(".")
             '
-        #)
-        echo got here-1
-        cat >>"${GITHUB_OUTPUTS}" <<_EOF_
+        )
+        cat >>"${GITHUB_OUTPUTS}" <<"_EOF_"
         token<<EOF
         ${TOKEN_UNSIGNED}
         EOF
