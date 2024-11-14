@@ -86,7 +86,7 @@ runs:
               | join(".")
             '
         )
-        cat >>"${GITHUB_OUTPUT}" <<"_EOF_"
+        cat >>"${GITHUB_OUTPUT}" <<_EOF_
         token<<EOF
         ${TOKEN_UNSIGNED}
         EOF
@@ -103,6 +103,7 @@ runs:
         echo ::group::token
         echo "$TOKEN"
         echo ::endgroup::
+
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
         jq -L "$JQ_LIB_PATH" \
