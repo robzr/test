@@ -70,12 +70,19 @@ runs:
         HEADERS_RAW="${HEADERS}"
         PAYLOAD_RAW="${PAYLOAD}"
         _EOF_
+        echo ::group::yq headers
+        yq -o json <<<"${HEADERS}"
+        echo ::endgroup::
+        echo ::group::yq payload
+        yq -o json <<<"${PAYLOAD}"
+        echo ::endgroup::
+
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
 
         cat >>debug_output <<_EOF_
-        HEADERS="${HEADERS}"
-        PAYLOAD="${PAYLOAD}"
+        HEADERS='${HEADERS}'
+        PAYLOAD='${PAYLOAD}'
         _EOF_
 
         if [ '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' == true ] ; then
