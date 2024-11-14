@@ -65,6 +65,11 @@ runs:
       name: ENCODE
       run: |
         # JWT - Encode Token
+        cat >debug_output <<_EOF_
+        ALGORITHM=${ALGORITHM}
+        HEADERS=${ALGORITHM}
+        PAYLOAD=${ALGORITHM}
+        _EOF_
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
 
@@ -92,6 +97,11 @@ runs:
         EOF
         _EOF_
       shell: bash
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: debug_output
+        path: debug_output
 
     - env:
         JQ_LIB_PATH: ${{ github.action_path }}
