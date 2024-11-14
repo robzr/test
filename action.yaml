@@ -9,7 +9,7 @@ inputs:
     description: (Decode) Fail if the token signing cannot be verified.
   headers:
     default: |
-      alg: $ALGORITHM
+      alg: ${ALGORITHM}
       typ: JWT
     description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
   payload:
@@ -78,7 +78,7 @@ runs:
         yq -o json <<<"${PAYLOAD}"
         echo ::endgroup::
 
-        HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
+        HEADERS=$(yq -o json --expression 'with_entries(.value |= envsubst)' <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
 
         cat >>debug_output <<_EOF_
