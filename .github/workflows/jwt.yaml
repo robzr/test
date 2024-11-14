@@ -13,6 +13,7 @@ jobs:
         name: Run JWT Action
         uses: ./
         with:
+          enable-display: true
           payload: |
             claim_key: claim_value
 
