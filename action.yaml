@@ -86,7 +86,7 @@ runs:
         PAYLOAD='${PAYLOAD}'
         _EOF_
 
-        if [ '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' == true ] ; then
+        if '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' ; then
           echo ::group::HEADERS
           echo "$HEADERS"
           echo ::endgroup::
@@ -104,8 +104,14 @@ runs:
               | join(".")
             '
         )
+
+        SIGNATURE_ARGS=()
+        if '${{ env.SECRETS == '' && 'true' || 'false' }}' ; then 
+          SIGNATURE_ARGS=(-hmac "$SECRET")
+        fi
+
         SIGNATURE=$(
-          echo -n "$TOKEN_UNSIGNED" | openssl dgst -binary -hmac "${SECRET}" -sha256 | base64)
+          echo -n "$TOKEN_UNSIGNED" | openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 | base64)
         )
         jq -n -r -L "$JQ_LIB_PATH" \
           --arg token_unsigned "$TOKEN_UNSIGNED" \
