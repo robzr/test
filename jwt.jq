@@ -50,7 +50,7 @@ def verify($signature):
   . as $token
   | decode 
   | . * {
-    algorithm: (.headers | @json | .algorithm),
+    algorithm: (.headers.alg),
     token: $token,
     verified: (($signature | @base64d) == (.signature | @base64d)),
   }
