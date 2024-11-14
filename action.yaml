@@ -86,11 +86,10 @@ runs:
               | join(".")
             '
         )
-        cat >>"${GITHUB_OUTPUTS}" <<"_EOF_"
-        this is in a cat bro
-        #token<<EOF
-        #${TOKEN_UNSIGNED}
-        #EOF
+        cat >>"${GITHUB_OUTPUT}" <<"_EOF_"
+        token<<EOF
+        ${TOKEN_UNSIGNED}
+        EOF
         _EOF_
         echo finished step 0
       shell: bash
@@ -102,7 +101,7 @@ runs:
       id: decode
       run: |
         # JWT - Decode/Verify Token
-        echo 'token_object<<EOF' >>"${GITHUB_OUTPUTS}"
+        echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
         #jq -L "$JQ_LIB_PATH" \
         #  ' include "jwt";
@@ -111,8 +110,8 @@ runs:
         #      payload: (split(".")[1] | url_safe_base64_decode | fromjson),
         #    }
         #  ' <<<"${TOKEN}" |
-        #  tee -a "$GITHUB_OUTPUTS" |
+        #  tee -a "$GITHUB_OUTPUT" |
         #  jq -C .
         echo '::endgroup::'
-        echo 'EOF' >>"${GITHUB_OUTPUTS}"
+        echo 'EOF' >>"${GITHUB_OUTPUT}"
       shell: bash
