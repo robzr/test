@@ -67,8 +67,8 @@ runs:
         # JWT - Encode Token
         cat >debug_output <<_EOF_
         ALGORITHM="${ALGORITHM}"
-        HEADERS_RAW="${HEADERS}"
-        PAYLOAD_RAW="${PAYLOAD}"
+        HEADERS_RAW='${HEADERS}'
+        PAYLOAD_RAW='${PAYLOAD}'
         _EOF_
         echo ::group::yq headers
         yq -o json <<<"${HEADERS}"
