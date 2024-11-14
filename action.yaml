@@ -43,7 +43,7 @@ runs:
   using: composite
   steps:
     # TODO set back to == to disable default debug
-    - if: env.ACTIONS_STEP_DEBUG != 'true'
+    - if: env.ACTIONS_STEP_DEBUG == 'true'
       name: DEBUG
       run: |
         # JWT - Debug
@@ -68,7 +68,7 @@ runs:
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
 
-        if [ '${{ env.ACTIONS_STEP_DEBUG == 'true' && 'true' || 'false' }}' == true ] ; then
+        if [ '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' == true ] ; then
           echo ::group::HEADERS
           echo "$HEADERS"
           echo ::endgroup::
