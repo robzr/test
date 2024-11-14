@@ -106,19 +106,14 @@ runs:
       id: decode
       run: |
         # JWT - Decode/Verify Token
-        echo ::group::token
-        echo "$TOKEN"
-        echo ::endgroup::
-
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
-        jq -C -L "$JQ_LIB_PATH" -R \
+        jq -L "$JQ_LIB_PATH" -R \
           ' include "jwt";
-            {
-              headers: (split(".")[0] | url_safe_base64_decode | fromjson),
-              payload: (split(".")[1] | url_safe_base64_decode | fromjson),
-            }
-          ' <<<"${TOKEN}" 
+            decode
+          ' <<<"${TOKEN}" |
+          tee -a "$GITHUB_OUTPUT" |
+          jq -C
         echo '::endgroup::'
         echo 'EOF' >>"${GITHUB_OUTPUT}"
       shell: bash

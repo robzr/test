@@ -26,3 +26,23 @@ def url_safe_base64_encode:
   | url_safe_encode
   ;
 
+def validate:
+  (split(".") | length) as $token_fields
+  | if $token_fields != 3 then
+      "Invalid token - contains \($token_fields) fields, requires 3."
+      | error
+    else
+      .
+    end
+  ;
+
+def decode:
+  validate
+  | {
+    headers: (split(".")[0] | url_safe_base64_decode | fromjson),
+    payload: (split(".")[1] | url_safe_base64_decode | fromjson),
+    unsigned: (split(".")[0] + "." + split(".")[1]),
+    signature: (split(".")[2] | url_safe_decode),
+  }
+  ;
+
