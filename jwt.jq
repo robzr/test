@@ -16,7 +16,7 @@ def url_safe_encode:
   | gsub("\n"; "")
   ;
 
-def url_safe_base64_encode:
+def url_safe_base64_decode:
   url_safe_decode
   | @base64d
   ;

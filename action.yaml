@@ -44,6 +44,7 @@ runs:
   steps:
     # TODO set back to == to disable default debug
     - if: env.ACTIONS_STEP_DEBUG != 'true'
+      name: DEBUG
       run: |
         # JWT - Debug
         echo ::group::Display utility versions
@@ -61,6 +62,7 @@ runs:
         SECRET: ${{ inputs.secret }}
       id: encode
       if: inputs.payload != ''
+      name: ENCODE
       run: |
         # JWT - Encode Token
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
