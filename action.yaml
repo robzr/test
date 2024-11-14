@@ -66,12 +66,17 @@ runs:
       run: |
         # JWT - Encode Token
         cat >debug_output <<_EOF_
-        ALGORITHM=${ALGORITHM}
-        HEADERS=${ALGORITHM}
-        PAYLOAD=${ALGORITHM}
+        ALGORITHM="${ALGORITHM}"
+        HEADERS_RAW="${HEADERS}"
+        PAYLOAD_RAW="${PAYLOAD}"
         _EOF_
         HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
+
+        cat >>debug_output <<_EOF_
+        HEADERS="${HEADERS}"
+        PAYLOAD="${PAYLOAD}"
+        _EOF_
 
         if [ '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' == true ] ; then
           echo ::group::HEADERS
