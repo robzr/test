@@ -110,7 +110,7 @@ runs:
             base64
         )
         if $ENABLE_MASK_SIGNATURE ; then
-          echo "::addmask::${SIGNATURE}"
+          echo "::add-mask::${SIGNATURE}"
         fi
         JWT=$(
           jq -n -r -L "$JQ_LIB_PATH" \
@@ -119,7 +119,7 @@ runs:
             'include "jwt"; assemble($jwt_unsigned; $signature)'
         )
         if $ENABLE_MASK_JWT ; then
-          echo "::addmask::${JWT}"
+          echo "::add-mask::${JWT}"
         fi
         echo -e "jwt<<EOF\n${JWT}\nEOF" >>"${GITHUB_OUTPUT}"
 
