@@ -128,12 +128,17 @@ runs:
     - env:
         ENABLE_DISPLAY: ${{ inputs.enable-display == 'true' && 'true' || 'false' }}
         ENABLE_FAIL_ON_UNVERIFIED: ${{ inputs.enable-fail-on-unverified == 'true' && 'true' || 'false' }}
+        ENABLE_MASK_JWT: ${{ inputs.enable-mask-jwt == 'true' && 'true' || 'false' }}
+        ENABLE_MASK_SIGNATURE: ${{ inputs.enable-mask-signature == 'true' && 'true' || 'false' }}
         JQ_LIB_PATH: ${{ github.action_path }}
         JWT: ${{ inputs.jwt == '' && steps.encode.outputs.jwt || inputs.jwt }}
         SECRET: ${{ inputs.secret }}
       id: decode
       run: |
         # JWT - Decode/Verify Token
+        if $ENABLE_MASK_JWT ; then
+          echo "::add-mask::${JWT}"
+        fi
         JWT_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" --arg jwt "$JWT" \
             'include "jwt"; $jwt | decode_raw.unsigned'
@@ -147,6 +152,9 @@ runs:
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
+        if $ENABLE_MASK_SIGNATURE ; then
+          echo "::add-mask::${SIGNATURE}"
+        fi
         JSON=$(
           jq -n -L "$JQ_LIB_PATH" --arg jwt "$JWT" --arg signature "$SIGNATURE" \
             'include "jwt"; $jwt | verify($signature)'
