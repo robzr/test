@@ -75,6 +75,8 @@ runs:
         echo "$PAYLOAD"
         echo ::endgroup::
 
+        set -x
+
         TOKEN_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
