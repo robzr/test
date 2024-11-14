@@ -109,20 +109,19 @@ runs:
         if '${{ inputs.SECRETS == '' && 'false' || 'true' }}' ; then 
           SIGNATURE_ARGS=(-hmac "$SECRET")
         fi
-
         SIGNATURE=$(
           echo -n "$TOKEN_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
 
-        echo "SIGNATURE=${SIGNATURE} oh yeah!"
-
-        jq -n -L "$JQ_LIB_PATH" \
+        jq -n -r -L "$JQ_LIB_PATH" \
           --arg token_unsigned "$TOKEN_UNSIGNED" \
           --arg signature "$SIGNATURE" \
           ' include "jwt";'
-            "token=xxx"
+            [($token_unsigned), ($signature | url_safe_encode)] 
+            | join(".")
+            | "token=\(.)"
           ' | tee -a "$GITHUB_OUTPUT"
       shell: bash
 
