@@ -164,7 +164,7 @@ runs:
         echo -e "json<<EOF\n${JSON}\nEOF" >>"${GITHUB_OUTPUT}"
         if "$ENABLE_DISPLAY" ; then
           echo '::group::JWT Decoded'
-          jq -C . <<<"$json"
+          jq -C . <<<"$JSON"
           echo '::endgroup::'
         fi
         VERIFIED=$(jq -n -r .verified <<<"${JSON}")
