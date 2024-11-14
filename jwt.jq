@@ -54,4 +54,7 @@ def verify($signature):
     jwt: $jwt,
     verified: (($signature | @base64d) == (.signature | @base64d)),
   }
+  | to_entries
+  | sort_by(.key)
+  | from_entries
   ;
