@@ -9,7 +9,7 @@ inputs:
     description: (Decode) Fail if the token signing cannot be verified.
   headers:
     default: |
-      alg: \($algorithm)
+      alg: $ALGORITHM
       typ: JWT
     description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
   payload:
@@ -63,15 +63,23 @@ runs:
       if: inputs.payload != ''
       run: |
         # JWT - Encode Token
-        HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c --arg algorithm "$ALGORITHM")
+        HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
+
+        echo ::group::HEADERS
+        echo "$HEADERS"
+        echo ::endgroup::
+        echo ::group::PAYLOAD
+        echo "$PAYLOAD"
+        echo ::endgroup::
+
         TOKEN_UNSIGNED=$(
-          jq -c -r -L "$JQ_LIB_PATH" \
+          jq -c -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
             --arg payload "$PAYLOAD" \
             ' include "jwt";
-              [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)] |
-              join(".")
+              [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)]
+              | join(".")
             '
         )
         cat >>"${GITHUB_OUTPUTS}" <<_EOF_
