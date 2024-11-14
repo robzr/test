@@ -118,7 +118,7 @@ runs:
         jq -n -r -L "$JQ_LIB_PATH" \
           --arg token_unsigned "$TOKEN_UNSIGNED" \
           --arg signature "$SIGNATURE" \
-          ' include "jwt";'
+          ' include "jwt";
             [($token_unsigned), ($signature | url_safe_encode)] 
             | join(".")
             | "token=\(.)"
