@@ -58,10 +58,3 @@ def verify($signature):
   | sort_by(.key)
   | from_entries
   ;
-
-
-def assemble($jwt_unsigned; $signature):
-  [($jwt_unsigned), ($signature | url_safe_encode)] 
-  | join(".")
-  ;
-
