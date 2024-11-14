@@ -119,11 +119,9 @@ runs:
         jq -n -L "$JQ_LIB_PATH" \
           --arg token_unsigned "$TOKEN_UNSIGNED" \
           --arg signature "$SIGNATURE" \
-          ' include "jwt";
-             
-            "token="
+          ' include "jwt";'
+            "token=xxx"
           ' | tee -a "$GITHUB_OUTPUT"
-         #>>"${GITHUB_OUTPUT}"
       shell: bash
 
     - uses: actions/upload-artifact@v4
