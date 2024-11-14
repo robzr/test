@@ -11,7 +11,7 @@ jobs:
 
       - id: run-jwt-action
         name: Run JWT Action
-        run: ./
+        uses: ./
         with:
           payload: |
             claim_key: claim_value
