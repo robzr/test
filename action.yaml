@@ -109,7 +109,8 @@ runs:
         SIGNATURE=$(
           echo -n "$JWT_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
-            jq -r -L "$JQ_LIB_PATH" 'include "jwt"; url_safe_base64_encode'
+            base64 |
+            jq -r -L "$JQ_LIB_PATH" 'include "jwt"; url_safe_encode'
         )
         if $ENABLE_MASK_SIGNATURE ; then
           echo "::add-mask::${SIGNATURE}"
@@ -152,7 +153,8 @@ runs:
         SIGNATURE=$(
           echo -n "$JWT_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
-            jq -r -L "$JQ_LIB_PATH" 'include "jwt"; url_safe_base64_encode'
+            base64 |
+            jq -r -L "$JQ_LIB_PATH" 'include "jwt"; url_safe_encode'
         )
         if $ENABLE_MASK_SIGNATURE ; then
           echo "::add-mask::${SIGNATURE}"
