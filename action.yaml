@@ -110,7 +110,7 @@ runs:
           echo -n "$JWT_UNSIGNED" |
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64 |
-            jq -r -L "$JQ_LIB_PATH" 'include "jwt"; url_safe_encode'
+            jq -r -L "$JQ_LIB_PATH" -R 'include "jwt"; url_safe_encode'
         )
         if $ENABLE_MASK_SIGNATURE ; then
           echo "::add-mask::${SIGNATURE}"
