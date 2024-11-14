@@ -106,7 +106,7 @@ runs:
         )
 
         SIGNATURE_ARGS=()
-        if '${{ env.SECRETS == '' && 'true' || 'false' }}' ; then 
+        if '${{ inputs.SECRETS == '' && 'false' || 'true' }}' ; then 
           SIGNATURE_ARGS=(-hmac "$SECRET")
         fi
 
