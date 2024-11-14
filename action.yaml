@@ -10,7 +10,7 @@ inputs:
     description: (Decode/Encode) Enable pretty colorized display of JWT decoded object.
     type: boolean
   enable-fail-on-unverified:
-    default: false
+    default: true
     description: (Decode) Fail if the JWT signing cannot be verified.
     type: boolean
   enable-mask-jwt: 
@@ -75,6 +75,8 @@ runs:
 
     - env:
         ALGORITHM: ${{ inputs.algorithm }}
+        ENABLE_MASK_JWT: ${{ inputs.enable-mask-jwt == 'true' && 'true' || 'false' }}
+        ENABLE_MASK_SIGNATURE: ${{ inputs.enable-mask-signature == 'true' && 'true' || 'false' }}
         HEADERS: ${{ inputs.headers }}
         JQ_LIB_PATH: ${{ github.action_path }}
         PAYLOAD: ${{ inputs.payload }}
@@ -107,13 +109,25 @@ runs:
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
-        jq -n -r -L "$JQ_LIB_PATH" \
-          --arg jwt_unsigned "$JWT_UNSIGNED" \
-          --arg signature "$SIGNATURE" \
-          'include "jwt"; assemble($jwt_unsigned; $signature) | "jwt=\(.)"' >>"${GITHUB_OUTPUT}"
+        if $ENABLE_MASK_SIGNATURE ; then
+          echo "::addmask::${SIGNATURE}"
+        fi
+        JWT=$(
+          jq -n -r -L "$JQ_LIB_PATH" \
+            --arg jwt_unsigned "$JWT_UNSIGNED" \
+            --arg signature "$SIGNATURE" \
+            'include "jwt"; assemble($jwt_unsigned; $signature)'
+        )
+        if $ENABLE_MASK_JWT ; then
+          echo "::addmask::${JWT}"
+        fi
+        echo -e "jwt<<EOF\n${JWT}\nEOF" >>"${GITHUB_OUTPUT}"
+
       shell: bash
 
     - env:
+        ENABLE_DISPLAY: ${{ inputs.enable-display == 'true' && 'true' || 'false' }}
+        ENABLE_FAIL_ON_UNVERIFIED: ${{ inputs.enable-fail-on-unverified == 'true' && 'true' || 'false' }}
         JQ_LIB_PATH: ${{ github.action_path }}
         JWT: ${{ inputs.jwt == '' && steps.encode.outputs.jwt || inputs.jwt }}
         SECRET: ${{ inputs.secret }}
@@ -138,9 +152,14 @@ runs:
             'include "jwt"; $jwt | verify($signature)'
         )
         echo -e "json<<EOF\n${JSON}\nEOF" >>"${GITHUB_OUTPUT}"
-        if ${{ inputs.enable-display == 'true' && 'true' || 'false' }} ; then
-          echo '::group::Decoded Token Object'
+        if "$ENABLE_DISPLAY" ; then
+          echo '::group::JWT Decoded'
           jq -C . <<<"$json"
           echo '::endgroup::'
+        fi
+        VERIFIED=$(jq -n -r --arg json "$JSON" '$json.verified')
+        if "$ENABLE_FAIL_ON_UNVERIFIED" && [ "$VERIFIED" == false ] ; then
+          echo '::error title=JWT Failed Verification::Was unable to verify the token using the supplied secret.'
+          exit 1
         fi
       shell: bash
