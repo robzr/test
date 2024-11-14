@@ -117,11 +117,9 @@ runs:
           --arg token_unsigned "$TOKEN_UNSIGNED" \
           --arg signature "$SIGNATURE" \
           ' include "jwt";
-            "token=\(
-              [$token_unsigned, ($signature | url_safe_encode)]
-              | join(".")
-            )"
-          ' >>"${GITHUB_OUTPUT}"
+            "token=\([$token_unsigned, ($signature | url_safe_encode)] | join("."))"
+          ' 
+         #>>"${GITHUB_OUTPUT}"
       shell: bash
 
     - uses: actions/upload-artifact@v4
