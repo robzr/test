@@ -5,9 +5,21 @@ inputs:
     default: HS256
     description: (Encode) Signing algorithm for encoding a new JWT.
     type: string
-  fail-on-unverified:
+  enable-display:
+    default: false
+    description: (Decode/Encode) Enable pretty colorized display of JWT decoded object.
+    type: boolean
+  enable-fail-on-unverified:
     default: false
     description: (Decode) Fail if the JWT signing cannot be verified.
+    type: boolean
+  enable-mask-jwt: 
+    default: false
+    description: (Decode/Encode) Enable masking of entire JWT in Actions output.
+    type: boolean
+  enable-mask-signature: 
+    default: true
+    description: (Decode/Encode) Enable masking of JWT signature in Actions output.
     type: boolean
   headers:
     default: |
@@ -16,7 +28,7 @@ inputs:
     description: (Encode) Header jq template for encoding a new JWT (JSON or YAML).
     type: string
   jwt:
-    description: (Decode/Encode) JWT that will be decoded & verified.
+    description: (Decode) JWT that will be decoded & verified.
     required: false
     type: string
   payload:
@@ -125,12 +137,14 @@ runs:
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
-        echo 'json<<EOF' >>"${GITHUB_OUTPUT}"
-        echo '::group::Decoded Token Object'
-        jq -n -L "$JQ_LIB_PATH" --arg jwt "$JWT" --arg signature "$SIGNATURE" \
-          'include "jwt"; $jwt | verify($signature)' |
-          tee -a "$GITHUB_OUTPUT" |
-          jq -C
-        echo '::endgroup::'
-        echo 'EOF' >>"${GITHUB_OUTPUT}"
+        JSON=$(
+          jq -n -L "$JQ_LIB_PATH" --arg jwt "$JWT" --arg signature "$SIGNATURE" \
+            'include "jwt"; $jwt | verify($signature)'
+        )
+        echo -e "json<<EOF\n${JSON}\nEOF" >>"${GITHUB_OUTPUT}"
+        if ${{ inputs.enable-display == 'true' && 'true' || 'false' }} ; then
+          echo '::group::Decoded Token Object'
+          jq -C . <<<"$json"
+          echo '::endgroup::'
+        fi
       shell: bash
