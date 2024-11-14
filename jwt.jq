@@ -46,3 +46,9 @@ def decode:
   }
   ;
 
+def validate($signature):
+  decode 
+  | . * {
+    validated: (($signature | @base64d) == (.signature | @base64d))
+  }
+  ;

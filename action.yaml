@@ -106,12 +106,20 @@ runs:
       id: decode
       run: |
         # JWT - Decode/Verify Token
+        TOKEN_UNSIGNED=$(
+          jq -n -r -L "$JQ_LIB_PATH" --arg token "$TOKEN" \
+            'include "jwt"; $token | decode.unsigned'
+        )
+        SIGNATURE=$(
+          echo -n "$TOKEN_UNSIGNED" |
+            openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
+            base64
+        )
+
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Token Object'
-        jq -L "$JQ_LIB_PATH" -R \
-          ' include "jwt";
-            decode
-          ' <<<"${TOKEN}" |
+        jq -n -L "$JQ_LIB_PATH" --arg token "$TOKEN" --arg signature "$SIGNATURE" \
+          'include "jwt"; $token | validate($signature)' |
           tee -a "$GITHUB_OUTPUT" |
           jq -C
         echo '::endgroup::'
