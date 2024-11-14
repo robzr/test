@@ -87,9 +87,10 @@ runs:
             '
         )
         cat >>"${GITHUB_OUTPUTS}" <<"_EOF_"
-        token<<EOF
-        ${TOKEN_UNSIGNED}
-        EOF
+        this is in a cat bro
+        #token<<EOF
+        #${TOKEN_UNSIGNED}
+        #EOF
         _EOF_
         echo finished step 0
       shell: bash
