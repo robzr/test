@@ -25,7 +25,7 @@ inputs:
 outputs:
   algorithm:
     description: (Encode/Decode) Signing algorithm.
-    value: 
+    value: ${{ steps.
   headers:
     description: (Encode/Decode) Decoded headers in JSON.
     value: 
@@ -42,23 +42,61 @@ outputs:
 runs:
   using: composite
   steps:
+    # TODO set back to == to disable default debug
+    - if: env.ACTIONS_STEP_DEBUG != 'true'
+      run: |
+        # JWT - Debug
+        echo ::group::Display utility versions
+        yq --version
+        jq --version
+        openssl version
+        echo ::endgroup::
+      shell: bash
+
     - env:
         ALGORITHM: ${{ inputs.algorithm }}
         HEADERS: ${{ inputs.headers }}
+        JQ_LIB_PATH: ${{ github.action_path }}
         PAYLOAD: ${{ inputs.payload }}
         SECRET: ${{ inputs.secret }}
       id: encode
       if: inputs.payload != ''
       run: |
-        # Encode JWT token
-        echo ::group::yq
-        yq --version
-        echo ::endgroup::
-        echo ::group::jq
-        jq --version
-        echo ::endgroup::
-        echo ::group::openssl
-        openssl --version
-        echo ::endgroup::
+        # JWT - Encode Token
+        HEADERS=$(yq -o json <<<"${HEADERS}" | jq -c --arg algorithm "$ALGORITHM")
+        PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
+        TOKEN_UNSIGNED=$(
+          jq -c -r -L "$JQ_LIB_PATH" \
+            --arg headers "$HEADERS" \
+            --arg payload "$PAYLOAD" \
+            ' [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)] |
+              join(".")
+            '
+        )
+        cat >>"${GITHUB_OUTPUTS}" <<_EOF_
+        token<<EOF
+        ${TOKEN_UNSIGNED}
+        EOF
+        _EOF_
       shell: bash
 
+    - env:
+        JQ_LIB_PATH: ${{ github.action_path }}
+        TOKEN: ${{ inputs.token == '' && steps.encode.outputs.token || inputs.token }}
+        SECRET: ${{ inputs.secret }}
+      id: decode
+      run: |
+        # JWT - Decode/Verify Token
+        echo 'token_object<<EOF' >>"${GITHUB_OUTPUTS}"
+        echo '::group::Token Object'
+        jq -L "$JQ_LIB_PATH" \
+          ' {
+              headers: (split(".")[0] | url_safe_base64_decode | fromjson),
+              payload: (split(".")[1] | url_safe_base64_decode | fromjson),
+            }
+          ' <<<"${TOKEN}" |
+          tee -a "$GITHUB_OUTPUTS" |
+          jq -C .
+        echo '::endgroup::'
+        echo 'EOF' >>"${GITHUB_OUTPUTS}"
+      shell: bash
