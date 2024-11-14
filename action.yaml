@@ -157,7 +157,7 @@ runs:
           jq -C . <<<"$json"
           echo '::endgroup::'
         fi
-        VERIFIED=$(jq -n -r --arg json "$JSON" '$json.verified')
+        VERIFIED=$(jq -n -r .verified <<<"${JSON}")
         if "$ENABLE_FAIL_ON_UNVERIFIED" && [ "$VERIFIED" == false ] ; then
           echo '::error title=JWT Failed Verification::Was unable to verify the token using the supplied secret.'
           exit 1
