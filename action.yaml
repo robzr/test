@@ -110,11 +110,7 @@ runs:
         jq -n -r -L "$JQ_LIB_PATH" \
           --arg jwt_unsigned "$JWT_UNSIGNED" \
           --arg signature "$SIGNATURE" \
-          ' include "jwt";
-            [($jwt_unsigned), ($signature | url_safe_encode)] 
-            | join(".")
-            | "jwt=\(.)"
-          ' >>"${GITHUB_OUTPUT}"
+          'include "jwt"; assemble($jwt_unsigned; $signature) | "jwt=\(.)"' >>"${GITHUB_OUTPUT}"
       shell: bash
 
     - env:
