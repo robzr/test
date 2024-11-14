@@ -69,7 +69,8 @@ runs:
           jq -c -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
             --arg payload "$PAYLOAD" \
-            ' [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)] |
+            ' include "jwt";
+              [($headers | url_safe_base64_encode), ($payload | url_safe_base64_encode)] |
               join(".")
             '
         )
@@ -90,7 +91,8 @@ runs:
         echo 'token_object<<EOF' >>"${GITHUB_OUTPUTS}"
         echo '::group::Token Object'
         jq -L "$JQ_LIB_PATH" \
-          ' {
+          ' include "jwt";
+            {
               headers: (split(".")[0] | url_safe_base64_decode | fromjson),
               payload: (split(".")[1] | url_safe_base64_decode | fromjson),
             }
