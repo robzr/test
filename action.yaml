@@ -122,7 +122,7 @@ runs:
         echo 'json<<EOF' >>"${GITHUB_OUTPUT}"
         echo '::group::Decoded Token Object'
         jq -n -L "$JQ_LIB_PATH" --arg token "$TOKEN" --arg signature "$SIGNATURE" \
-          'include "jwt"; $token | validate($signature)' |
+          'include "jwt"; $token | verify($signature)' |
           tee -a "$GITHUB_OUTPUT" |
           jq -C
         echo '::endgroup::'
