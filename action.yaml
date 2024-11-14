@@ -67,16 +67,10 @@ runs:
         # JWT - Encode Token
         HEADERS=$(yq -o json --expression 'with_entries(.value |= envsubst)' <<<"${HEADERS}" | jq -c)
         PAYLOAD=$(yq -o json <<<"${PAYLOAD}" | jq -c)
-
         if '${{ env.ACTIONS_STEP_DEBUG != 'true' && 'true' || 'false' }}' ; then
-          echo ::group::HEADERS
-          echo "$HEADERS"
-          echo ::endgroup::
-          echo ::group::PAYLOAD
-          echo "$PAYLOAD"
-          echo ::endgroup::
+          echo -e "::group::Debug - headers\n${HEADERS}\n::endgroup::"
+          echo -e "::group::Debug - payload\n${PAYLOAD}\n::endgroup::"
         fi
-        set -x
         TOKEN_UNSIGNED=$(
           jq -n -r -L "$JQ_LIB_PATH" \
             --arg headers "$HEADERS" \
@@ -86,7 +80,6 @@ runs:
               | join(".")
             '
         )
-
         SIGNATURE_ARGS=()
         if '${{ inputs.SECRETS == '' && 'false' || 'true' }}' ; then 
           SIGNATURE_ARGS=(-hmac "$SECRET")
@@ -96,7 +89,6 @@ runs:
             openssl dgst -binary "${SIGNATURE_ARGS[@]}" -sha256 |
             base64
         )
-
         jq -n -r -L "$JQ_LIB_PATH" \
           --arg token_unsigned "$TOKEN_UNSIGNED" \
           --arg signature "$SIGNATURE" \
